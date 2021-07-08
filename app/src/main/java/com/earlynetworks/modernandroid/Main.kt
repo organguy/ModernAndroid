@@ -42,13 +42,24 @@ fun main(){
         else -> println("else")
     }
 
-    val person = Person("홍길동")
+    val person = Person("홍길동", 20)
+
+    println(person)
+
+    val strHello = "Hello"
+    println(strHello.myLength())
+
+    val item = Item("항아리")
+    println(item)
+}
+
+fun String.myLength(): Int{
+    return this.length
 }
 
 fun myMethod(a: Int, b: Int): Int = a + b
 
-class Person(name: String) {
-    init{
-        println(name)
-    }
-}
+data class Person(
+    val name: String,
+    var age: Int
+)
