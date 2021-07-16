@@ -9,7 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ModernAndroid">
-        <activity android:name=".room_test_java.RoomExample">
+        <activity android:name=".room_test_kotlin.RoomKotlinActivity"></activity>
+        <activity android:name=".room_test_java.RoomJavaActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
