@@ -2,9 +2,14 @@ package com.earlynetworks.modernandroid.mask;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
+import android.graphics.Color;
+import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -15,29 +20,64 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.earlynetworks.modernandroid.MainActivity;
 import com.earlynetworks.modernandroid.R;
 import com.earlynetworks.modernandroid.mask.model.Store;
-import com.earlynetworks.modernandroid.mask.model.StoreInfo;
-import com.earlynetworks.modernandroid.mask.repository.MaskService;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-import retrofit2.Retrofit;
-import retrofit2.converter.moshi.MoshiConverterFactory;
 
 public class MaskActivity extends AppCompatActivity {
 
     private static final String TAG = MaskActivity.class.getSimpleName();
 
+    private MaskViewModel viewModel;
+
+    private FusedLocationProviderClient fusedLocationClient;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mask);
+
+        viewModel = new ViewModelProvider(this).get(MaskViewModel.class);
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+        PermissionListener permissionListener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                performAction();
+            }
+
+            @Override
+            public void onPermissionDenied(List<String> deniedPermissions) {
+
+            }
+        };
+
+        TedPermission.with(this)
+                .setPermissionListener(permissionListener)
+                .setPermissions(Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION)
+                .check();
+
+    }
+
+    @SuppressLint("MissingPermission")
+    private void performAction() {
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if(location != null){
+                Log.d(TAG, "getLatitude : " + location.getLatitude());
+                Log.d(TAG, "getLongitude : " + location.getLongitude());
+
+                viewModel.location = location;
+                viewModel.fetchStoreInfo();
+            }
+        });
 
         RecyclerView recyclerView = findViewById(R.id.recycler_view);
 
@@ -46,28 +86,9 @@ public class MaskActivity extends AppCompatActivity {
         StoreAdapter adapter = new StoreAdapter();
         recyclerView.setAdapter(adapter);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(MaskService.BASE_URL)
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build();
-
-        MaskService service = retrofit.create(MaskService.class);
-
-        Call<StoreInfo> storeInfoCall = service.fetchStoreInfo();
-
-        storeInfoCall.enqueue(new Callback<StoreInfo>() {
-            @Override
-            public void onResponse(Call<StoreInfo> call, Response<StoreInfo> response) {
-                Log.d(TAG, "onResponse: refresh");
-                List<Store> items = response.body().getStores();
-                adapter.updateItems(items);
-                getSupportActionBar().setTitle("마스크 재고 있는 곳:" + items.size() + "곳");
-            }
-
-            @Override
-            public void onFailure(Call<StoreInfo> call, Throwable t) {
-                Log.e(TAG, "onFailure: ", t);
-            }
+        viewModel.itemLiveData.observe(this, stores -> {
+            adapter.updateItems(stores);
+            getSupportActionBar().setTitle("마스크 재고 있는 곳: " + stores.size());
         });
     }
 
@@ -82,7 +103,7 @@ public class MaskActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()){
             case R.id.action_refresh:
-                
+                viewModel.fetchStoreInfo();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -133,8 +154,44 @@ class StoreAdapter extends RecyclerView.Adapter<StoreAdapter.StoreViewHolder>{
         holder.nameTextView.setText(store.getName());
         holder.addressTextView.setText(store.getAddr());
         holder.distanceTextView.setText("1.0km");
-        holder.remainTextView.setText(store.getRemainStat());
-        holder.countTextView.setText("100개 이상");
+
+        String remainStat = "충분";
+        String remainCount = "100개 이상";
+        int color = Color.GREEN;
+
+        switch (store.getRemainStat()){
+            case "plenty":
+                remainStat = "충분";
+                remainCount = "100개 이상";
+                color = Color.GREEN;
+                break;
+
+            case "some":
+                remainStat = "여유";
+                remainCount = "30개 이상";
+                color = Color.YELLOW;
+                break;
+
+            case "few":
+                remainStat = "매진 임박";
+                remainCount = "2개 이상";
+                color = Color.RED;
+                break;
+
+            case "empty":
+                remainStat = "재고 없음";
+                remainCount = "1개 이하";
+                color = Color.GRAY;
+                break;
+
+            default:
+        }
+
+        holder.remainTextView.setText(remainStat);
+        holder.remainTextView.setTextColor(color);
+
+        holder.countTextView.setText(remainCount);
+        holder.countTextView.setTextColor(color);
     }
 
     @Override
