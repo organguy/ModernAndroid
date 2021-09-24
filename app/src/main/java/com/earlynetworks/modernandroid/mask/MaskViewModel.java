@@ -26,6 +26,8 @@ public class MaskViewModel extends ViewModel {
 
     public MutableLiveData<List<Store>> itemLiveData = new MutableLiveData<>();
 
+    public MutableLiveData<Boolean> loadingLiveData = new MutableLiveData<>();
+
     public Location location;
 
     private Retrofit retrofit = new Retrofit.Builder()
@@ -36,6 +38,9 @@ public class MaskViewModel extends ViewModel {
     private MaskService service = retrofit.create(MaskService.class);
 
     public void fetchStoreInfo(){
+
+        loadingLiveData.setValue(true);
+
         service.fetchStoreInfo(location.getLatitude(), location.getLongitude()).enqueue(new Callback<StoreInfo>() {
             @Override
             public void onResponse(Call<StoreInfo> call, Response<StoreInfo> response) {
@@ -43,15 +48,26 @@ public class MaskViewModel extends ViewModel {
                 List<Store> items = response.body().getStores()
                         .stream()
                         .filter(item -> item.getRemainStat() != null)
+                        .filter(item -> !item.getRemainStat().equals("empty"))
                         .collect(Collectors.toList());
 
+                for(Store store : items){
+                    double distance = LocationDistance.distance(location.getLatitude(), location.getLongitude(), store.getLat(), store.getLng(), "k");
+                    store.setDistance(distance);
+                }
+
+                Collections.sort(items);
+
                 itemLiveData.postValue(items);
+
+                loadingLiveData.postValue(false);
             }
 
             @Override
             public void onFailure(Call<StoreInfo> call, Throwable t) {
                 Log.e(TAG, "onFailure: ", t);
                 itemLiveData.postValue(Collections.emptyList());
+                loadingLiveData.postValue(false);
             }
         });
     }

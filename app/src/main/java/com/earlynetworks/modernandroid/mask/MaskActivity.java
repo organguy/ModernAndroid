@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.earlynetworks.modernandroid.R;
@@ -90,6 +91,15 @@ public class MaskActivity extends AppCompatActivity {
             adapter.updateItems(stores);
             getSupportActionBar().setTitle("마스크 재고 있는 곳: " + stores.size());
         });
+
+        ProgressBar progressBar = findViewById(R.id.progressBar);
+        viewModel.loadingLiveData.observe(this, isLoading -> {
+            if (isLoading){
+                progressBar.setVisibility(View.VISIBLE);
+            }else{
+                progressBar.setVisibility(View.GONE);
+            }
+        });
     }
 
     @Override
@@ -153,7 +163,7 @@ class StoreAdapter extends RecyclerView.Adapter<StoreAdapter.StoreViewHolder>{
 
         holder.nameTextView.setText(store.getName());
         holder.addressTextView.setText(store.getAddr());
-        holder.distanceTextView.setText("1.0km");
+        holder.distanceTextView.setText(String.format("%.2fKm", store.getDistance()));
 
         String remainStat = "충분";
         String remainCount = "100개 이상";

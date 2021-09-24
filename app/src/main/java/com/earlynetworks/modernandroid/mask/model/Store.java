@@ -1,6 +1,6 @@
 package com.earlynetworks.modernandroid.mask.model;
 
-public class Store {
+public class Store implements Comparable<Store>{
 
     @com.squareup.moshi.Json(name = "addr")
     private String addr;
@@ -20,6 +20,8 @@ public class Store {
     private String stockAt;
     @com.squareup.moshi.Json(name = "type")
     private String type;
+
+    private double distance;
 
     public String getAddr() {
         return addr;
@@ -93,4 +95,16 @@ public class Store {
         this.type = type;
     }
 
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
+    }
+
+    @Override
+    public int compareTo(Store o) {
+        return Double.compare(distance, o.distance);
+    }
 }
