@@ -14,18 +14,43 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.ModernAndroid">
         <activity
-            android:name=".mask_kotlin.MaskKtxActivity">
+            android:name=".datatransfer.ResultActivity"
+            android:exported="false" />
+        <activity
+            android:name=".datatransfer.DataTransferActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-
         </activity>
-        <activity android:name=".mask.MaskActivity">
+        <activity
+            android:name=".counter.CounterActivity"
+            android:exported="false">
 
+            <!--
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            -->
         </activity>
-        <activity android:name=".navigation.NavigationActivity"></activity>
+        <activity
+            android:name=".mask_kotlin.MaskKtxActivity"
+            android:exported="false">
+
+            <!--
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            -->
+        </activity>
+        <activity android:name=".mask.MaskActivity" />
+        <activity android:name=".navigation.NavigationActivity" />
         <activity android:name=".room_test_java.RoomJavaActivity">
 
             <!--
