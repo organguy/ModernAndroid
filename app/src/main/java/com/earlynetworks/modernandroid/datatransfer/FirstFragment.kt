@@ -1,5 +1,6 @@
 package com.earlynetworks.modernandroid.datatransfer
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -16,16 +17,11 @@ import kotlinx.android.synthetic.main.fragment_first.*
 
 class FirstFragment : Fragment(R.layout.fragment_first) {
 
-    val getContent = registerForActivityResult(ActivityResultContracts.GetContent()){
-        imageView.setImageURI(it)
-    }
-
-    val getStartActivityForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){ activityResult ->
-        activityResult.data?.let { intent ->
-            intent.extras?.let { bundle ->
-                //Log.d("First Fragment", "result : ${bundle.getString("data", "world")}")
-                Toast.makeText(context, "result : ${bundle.getString("data", "world")}", Toast.LENGTH_SHORT).show()
-            }
+    val requestPermission = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if(granted) {
+            Toast.makeText(requireContext(), "성공", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -36,23 +32,8 @@ class FirstFragment : Fragment(R.layout.fragment_first) {
             // MIME TYPE
             //getContent.launch("image/*")
             Intent(requireContext(), ResultActivity::class.java).apply {
-                getStartActivityForResult.launch(this)
+                requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
             }
         }
-
-        /*setFragmentResultListener("requestKey") { resultKey, bundle ->
-            val data = bundle.getString("data", "")
-            Toast.makeText(requireContext(), data, Toast.LENGTH_SHORT).show()
-        }
-
-        button.setOnClickListener {
-
-            setFragmentResult(
-                "requestKey",
-                bundleOf("data" to "hello")
-            )
-
-            findNavController().navigate(R.id.action_firstFragment_to_secondFragment2)
-        }*/
     }
 }
