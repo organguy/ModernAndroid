@@ -18,10 +18,13 @@ import kotlinx.android.synthetic.main.fragment_first.*
 class FirstFragment : Fragment(R.layout.fragment_first) {
 
     val requestPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { granted ->
-        if(granted) {
-            Toast.makeText(requireContext(), "성공", Toast.LENGTH_SHORT).show()
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { map ->
+        if(map[Manifest.permission.ACCESS_FINE_LOCATION]!!){
+            Toast.makeText(requireContext(), "ACCESS_FINE_LOCATION 성공", Toast.LENGTH_SHORT).show()
+        }
+        if(map[Manifest.permission.ACCESS_COARSE_LOCATION]!!){
+            Toast.makeText(requireContext(), "ACCESS_COARSE_LOCATION 성공", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -32,7 +35,10 @@ class FirstFragment : Fragment(R.layout.fragment_first) {
             // MIME TYPE
             //getContent.launch("image/*")
             Intent(requireContext(), ResultActivity::class.java).apply {
-                requestPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                requestPermission.launch(arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ))
             }
         }
     }
